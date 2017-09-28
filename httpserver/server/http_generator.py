@@ -66,7 +66,10 @@ def generate_content_http(request):
         return generate_code_http(request, 404)
     print("get:", path)
     body = read_pattern(get_patterns["/media/.*"])
-    body = body = body[0: body.find('<body>')] + body[body.find('<body>'):].format(read_content(path))
+    body = (body[0: body.find('<title>')] +
+            body[body.find('<title>'): body.find('</title>')].format(path) +
+            body[body.find('</title>'): body.find('<body>')] +
+            body[body.find('<body>'):].format(read_content(path)))
     length = len(body)
     response.set_code(200)
     response.add_header("Server", "MyHttp")
@@ -120,9 +123,9 @@ def generate_test_http(request):
     response.set_body(body)
     return response
 
+
 def generate_get(request):
     param = request.http_param
-    response = HttpResponse()
     if re.match('^/$', param):
         return generate_main_http(request)
     if re.match('^/media/$', param):
@@ -136,7 +139,6 @@ def generate_get(request):
 
 def generate_http_response(r_request):
     request = parse_request(r_request)
-    allowed_get_param = re.compile(r"^/$|^/test/$|^/media/.*$")
     if request is None:
         return generate_code_http(request, 400)
     if request.http_method == "GET":
